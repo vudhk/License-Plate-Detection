@@ -1,21 +1,23 @@
+# usr/bin/python -tt
+
 import numpy as np
-import cv2, os
-from DataModel import DataModel
+import cv2, os, time
 from Classifier import Classifier  
 from AlgorithmType import AlgorithmType
-from datetime import datetime
-import time
+from os.path import dirname
 
-origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-model_stored_folder = origin_folder + "/ModelTraining"
+MODELTRAINING_FOLDER = '/ModelTraining'
+MODELFILE_STYPE = '{}_{}.dat'	# {algorithm-name}_{time-stamp}.dat
+IMG_WIDTH, IMG_HEIGHT = 40, 80
 
-def train(folder_name):
-	data_model = load_data(folder_name)
-	data_model = suffle_data(data_model)
-	hogs = compute_hog(init_hog(), data_model.characters)
-	classifier = Classifier(AlgorithmType.SVM, data_model)
-	classifier.train(hogs, data_model.labels)
-	classifier.save('{}/{}_{}.dat'.format(model_stored_folder, "SVM", int(time.time())))
+def train(folder_name, algorithm_type):
+	dir_root = dirname(dirname(folder_name)) + MODELTRAINING_FOLDER
+	characters, labels = load_data(folder_name)
+	characters, labels = suffle_data(characters, labels)
+	hogs = compute_hog(init_hog(), characters)
+	classifier = Classifier(algorithm_type)
+	classifier.train(hogs, labels)
+	classifier.save(dir_root + '/' + MODELFILE_STYPE.format(AlgorithmType(algorithm_type).name, int(time.time())))
 	return classifier
 
 
@@ -29,36 +31,36 @@ def load_data(folder_name):
 			img = cv2.imread('{}/{}/{}'.format(folder_name, cg, ch), 0)
 			characters.append(img)
 			labels.append(ord(cg))
+	return np.array(characters), np.array(labels)
 
-	return DataModel(np.array(characters), np.array(labels))
-
-def suffle_data(data_model):
+def suffle_data(characters, labels):
 	#
 	#	TO DO
 	#
-	return data_model
+	return characters, labels
 
-def init_hog(): 
-    winSize = (40, 80)
-    blockSize = (20, 40)
-    blockStride = (10, 20)
-    cellSize = (20, 40)
-    nbins = 9
-    derivAperture = 1
-    winSigma = -1.
-    histogramNormType = 0
-    L2HysThreshold = 0.2
-    gammaCorrection = 1
-    nlevels = 64
-    signedGradient = True
-    return cv2.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins,derivAperture,winSigma,histogramNormType,L2HysThreshold,gammaCorrection,nlevels, signedGradient)
+def init_hog():
+	winSize = (IMG_WIDTH, IMG_HEIGHT)
+	blockSize = (IMG_WIDTH//2, IMG_HEIGHT//2)
+	blockStride = (IMG_WIDTH//4, IMG_HEIGHT//4)
+	cellSize = (IMG_WIDTH//2, IMG_HEIGHT//2)
+	nbins = 9
+	derivAperture = 1
+	winSigma = -1.
+	histogramNormType = 0
+	L2HysThreshold = 0.2
+	gammaCorrection = 1
+	nlevels = 64
+	signedGradient = True
+	return cv2.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins,derivAperture,winSigma,histogramNormType,L2HysThreshold,gammaCorrection,nlevels, signedGradient)
 
 def compute_hog(hog, characters):
+	if IMG_WIDTH % 4 != 0 or IMG_HEIGHT % 4 != 0:
+		raise Exception('(width, height) of training image must modulus for 4 equal 0.')
 	hogs = []
 	for char in characters:
 		v = hog.compute(char)
 		hogs.append(v)
-
 	return np.squeeze(hogs)
 
 def test():

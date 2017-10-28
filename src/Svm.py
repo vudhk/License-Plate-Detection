@@ -1,9 +1,10 @@
+'''This is module for Support Vector Machine'''
+
 import numpy as np
 import cv2
 
 class Svm(object):
-	def __init__(self, data_model = None):
-		self.data_model = data_model
+	def __init__(self):
 		self.svm = cv2.ml.SVM_create()
 
 
@@ -22,15 +23,12 @@ class Svm(object):
 
 
 	def train(self, hogs, labels):
-		if self.data_model == None:
-			print("data_model is None!")
-		else:
-			c, gamma = self.find_c_and_grama()
-			self.svm.setC(c)
-			self.svm.setGamma(gamma)
-			self.svm.setType(cv2.ml.SVM_C_SVC)
-			self.svm.setKernel(cv2.ml.SVM_RBF)
-			self.svm.train(hogs, cv2.ml.ROW_SAMPLE, labels)
+		c, gamma = self.find_c_and_grama()
+		self.svm.setC(c)
+		self.svm.setGamma(gamma)
+		self.svm.setType(cv2.ml.SVM_C_SVC)
+		self.svm.setKernel(cv2.ml.SVM_RBF)
+		self.svm.train(hogs, cv2.ml.ROW_SAMPLE, labels)
 		  
 
 	def save(self, file_name):
@@ -38,6 +36,6 @@ class Svm(object):
 
 
 	def load(self, file_name):
-		self.svm = cv2.ml.SVM_load(file_name)
+		self.svm = cv2.ml.SVM_load(file_name) # Bug here
 
 

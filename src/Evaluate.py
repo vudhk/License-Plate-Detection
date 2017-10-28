@@ -1,2 +1,1 @@
-import numpy as np
-import cv2
+'''This is module for evaluate performance of algorithms'''
