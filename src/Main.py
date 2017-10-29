@@ -94,13 +94,14 @@ def segment():
 
 def training():
 	global model
+	global origin_folder
 	# Traning
+	origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 	model = Train.train(origin_folder + DATATRAINING_FOLDER, AlgorithmType.SVM)
 
 
 #def main(is_training):
 def recognise():
-	origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 	# Classifier
 	result = Experience.experience(image, model)
