@@ -3,6 +3,7 @@
 import numpy as np
 import cv2, uuid, os
 
+IMG_WIDTH, IMG_HEIGHT = 32, 40
 
 def segment(image):
 	if image.shape[1] >= image.shape[0] * 2 :
@@ -61,7 +62,7 @@ def segment(image):
 
 	#cv2.waitKey(0)
 
-	return np.array(list(map(lambda r: cv2.resize(r, (40, 80), interpolation = cv2.INTER_LINEAR), rois)))
+	return np.array(list(map(lambda r: left_to_fill(r), rois)))
 
 
 
@@ -77,6 +78,15 @@ def contours_nested(c, x, y, w, h):
 				bound_rects[idx] = (x, y, w, h)
 				list_coutours[idx] = c
 		return False
+
+def left_to_fill(image):
+	f = IMG_HEIGHT/image.shape[0]
+	resize_img = cv2.resize(image, None, fx=f, fy=f, interpolation = cv2.INTER_LINEAR)
+	bg = np.uint8(np.full((IMG_HEIGHT, IMG_WIDTH), 255))
+	bg[0:resize_img.shape[0], 0:resize_img.shape[1]] = resize_img
+	#resize_img = cv2.resize(image, (40, 80), interpolation = cv2.INTER_LINEAR)
+	#cv2.imwrite('/home/vudhk/Desktop/License-Plate-Detection/Samples/segnments/{}.jpg'.format(str(uuid.uuid4())), bg)
+	return bg
 
 
 #if __name__ == '__main__':
