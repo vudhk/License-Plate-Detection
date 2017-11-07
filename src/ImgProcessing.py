@@ -5,7 +5,19 @@ import cv2, uuid, os
 
 IMG_WIDTH, IMG_HEIGHT = 32, 40
 
+def get_binary_image():
+	return binary_image
+
+def get_board_image():
+	cv2.drawContours(fixed_size_image, list_coutours, -1, (0,255,0), 1)
+	return fixed_size_image
+
+def get_rois():
+	return rois
+
+
 def segment(image):
+	global fixed_size_image
 	if image.shape[1] >= image.shape[0] * 2 :
 		f = 90 / image.shape[0]
 		fixed_size_image = cv2.resize(image, None, fx=f, fy=f, interpolation = cv2.INTER_LINEAR)
@@ -14,7 +26,7 @@ def segment(image):
 		fixed_size_image = cv2.resize(image, None, fx=f, fy=f, interpolation = cv2.INTER_LINEAR)
 
 	#cv2.imshow('123', fixed_size_image)
-	
+	global binary_image
 	gray_image = cv2.cvtColor(fixed_size_image, cv2.COLOR_BGR2GRAY)
 	blur_image = cv2.GaussianBlur(gray_image, (5,5), 0)
 	__, binary_image = cv2.threshold(blur_image, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
@@ -22,8 +34,7 @@ def segment(image):
 	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
 	__, contours, __ = cv2.findContours(binary_image.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	
-	global bound_rects
-	global list_coutours
+	global bound_rects, list_coutours, rois
 
 	bound_rects = []
 	list_coutours = []

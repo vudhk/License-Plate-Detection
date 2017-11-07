@@ -1,15 +1,23 @@
 import numpy as np
-import cv2, sys, os, Train, Experience, imutils
-from AlgorithmType import AlgorithmType
+import cv2, sys, os, imutils
 from tkinter import *
 from tkinter.filedialog import askopenfilename, Open
 from tkinter.ttk import Frame, Button, Style, Entry
 from imutils import contours
 from PIL import Image, ImageTk
-from ImgProcessing import segment
+from ImgProcessing import *
+from Classifier import *  
+from AlgorithmType import AlgorithmType
+from Train import *
 
 SAMPLE_FOLDER = "/Samples"
 DATATRAINING_FOLDER = "/DataTraining"
+MODELTRAINING_FOLDER = '/ModelTraining'
+
+origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+model_training_folder = origin_folder + MODELTRAINING_FOLDER
+
+
 
 class MainFrame(Frame):
 	def __init__(self, parent):
@@ -26,22 +34,38 @@ class MainFrame(Frame):
 		self.parent.title("License Plate Recognition")
 		self.style = Style()
 		self.style.theme_use("clam")
-		
-		frame = Frame(self, width=400, relief=SUNKEN, borderwidth=1)
-		frame.pack(side=LEFT, fill=Y)
+		global frame2_2
+		frame1 = Frame(self, width=400, relief=SUNKEN, borderwidth=1)
+		frame2 = Frame(self, width=600, relief=SUNKEN, borderwidth=1)
+		frame2_1 = Frame(frame2, width=600, height=200, relief=SUNKEN, borderwidth=0)
+		frame2_1_1 = Frame(frame2_1, width=300, height=200, relief=SUNKEN, borderwidth=1)
+		frame2_1_2 = Frame(frame2_1, width=300, height=200, relief=SUNKEN, borderwidth=1)
+		frame2_2 = Frame(frame2, width=600, height=200, relief=SUNKEN, borderwidth=1)
+		frame2_3 = Frame(frame2, width=600, height=200, relief=SUNKEN, borderwidth=1)
+		frame1.pack(side=LEFT, fill=Y)
+		frame2.pack(side=LEFT, fill=Y)
+		frame2_1.pack(fill=X)
+		frame2_1_1.pack(side=LEFT)
+		frame2_1_2.pack(side=LEFT)
+		frame2_2.pack(fill=X)
+		frame2_3.pack(fill=X)
 		self.pack(fill=BOTH, expand=True)
 
-		global panel, image, txt
-		panel = Label(frame)
-		panel.pack(side=TOP, fill=BOTH, expand=True)
-		browseBtn = Button(frame, width=50, text="Choose Image", command=chooseFile)
-		browseBtn.pack(side=BOTTOM, padx=20, pady=20)
+		global panel1, panel2, panel3, panel4, image, txt
+		panel1 = Label(frame1)
+		panel2 = Label(frame2_1_1)
+		panel3 = Label(frame2_1_2)
+		panel1.pack(side=TOP, fill=BOTH, expand=True)
+		panel2.pack(side=TOP, fill=BOTH, expand=True)
+		panel3.pack(side=TOP, fill=BOTH, expand=True)
+		browseBtn = Button(frame1, width=50, text="Choose Image", command=chooseFile)
+		browseBtn.pack(side=BOTTOM)
 
-		regBtn = Button(self, text="Recognise", command=recognise)
-		regBtn.pack(side=LEFT, padx=20)
+		regBtn = Button(frame2_3, text="Recognise", command=recognise)
+		regBtn.pack(side=LEFT)
 
-		txt = Entry(self)
-		txt.pack(fill=X, expand=False, side=LEFT)
+		txt = Entry(frame2_3, width=100)
+		txt.pack(fill=BOTH, expand=False, side=LEFT)
 
 		training()
 
@@ -58,54 +82,45 @@ def chooseFile():
 		image1 = Image.fromarray(image1)
 		image1 = ImageTk.PhotoImage(image1)
 		
-		if not panel is None:
-			panel.configure(image=image1)
-			panel.image = image1
+		if not panel1 is None:
+			panel1.configure(image=image1)
+			panel1.image = image1
 		else:
 			print("null")
-
-'''
-def segment():
-	gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-	binary_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 5))
-	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
-	_, contours, _= cv2.findContours(binary_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	chars = []
-
-	for contour in contours:
-		(x, y, w, h) = cv2.boundingRect(contour)
-		ratio = w/h;
-		s = w * h;
-		
-		imCrop = binary_image[y:y+h, x:x+w]
-		white = cv2.countNonZero(imCrop);
-		ratioW = white/s;
-		
-		if ratioW < 0.75 and ratio < 1 and x > 2 and h > image.shape[1]/4 and h < image.shape[1]/2:
-			ic = image[y:y+h, x:x+w]
-			chars = chars + [ic]
-
-	i = 0
-	for c in chars:
-		cv2.imshow(str(i),c)
-		i = i + 1
-'''
 
 def training():
 	global model
 	global origin_folder
 	# Traning
 	origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-	model = Train.train(origin_folder + DATATRAINING_FOLDER, AlgorithmType.SVM)
+	model = train(origin_folder + DATATRAINING_FOLDER, AlgorithmType.SVM)
+	#model = Classifier.Classifier(AlgorithmType.SVM)
+	#model.load('/ModelTraining/SVM_1509192775.dat')
 
 
 #def main(is_training):
 def recognise():
 
 	# Classifier
-	result = Experience.experience(image, model)
-	txt.insert(0,'')
+	result = experience(image, model)
+
+	image1 = ImageTk.PhotoImage(Image.fromarray(get_binary_image()))
+	panel2.configure(image=image1)
+	panel2.image = image1
+
+	image1 = ImageTk.PhotoImage(Image.fromarray(get_board_image()))
+	panel3.configure(image=image1)
+	panel3.image = image1
+
+	for roi in get_rois():
+		panel4 = Label(frame2_2, width=40)
+		image1 = ImageTk.PhotoImage(Image.fromarray(roi))
+		panel4.configure(image=image1)
+		panel4.image = image1
+		panel4.pack(side=LEFT)
+
+
+	txt.delete(0, len(txt.get()))
 	txt.insert(0,''.join(result))
 	
 
@@ -120,10 +135,23 @@ def recognise():
 
 	return 0
 
+
+
+def experience(image, classifier = None):
+	chars = segment(image)
+	hogs = compute_hog(init_hog(), np.array(chars))
+	if len(hogs.shape) == 1 :
+		hogs = np.array([hogs])
+	resp = classifier.predict(hogs)
+	return list(map(lambda x: chr(x), resp))
+
+
+
 if __name__ == '__main__':
-	panel = None;
+	panel1 = None;
 	root = Tk()
-	root.geometry("800x600")
+	root.resizable(0,0) 
+	root.geometry("1000x600")
 	app = MainFrame(root)
 	root.mainloop()
 	#main()
