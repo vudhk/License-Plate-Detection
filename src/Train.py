@@ -2,24 +2,25 @@
 
 import numpy as np
 import cv2, os, time, uuid
-from Classifier import Classifier  
-from AlgorithmType import AlgorithmType
 from os.path import dirname
 
 MODELTRAINING_FOLDER = '/ModelTraining'
-MODELFILE_STYPE = '{}_{}.dat'	# {algorithm-name}_{time-stamp}.dat
+#MODELFILE_STYPE = '{}_{}.dat'	# {algorithm-name}_{time-stamp}.dat
 IMG_WIDTH, IMG_HEIGHT = 32, 40
 
-def train(folder_name, algorithm_type):
-	dir_root = dirname(dirname(folder_name)) + MODELTRAINING_FOLDER
+def train(folder_name):
+	dir_root = dirname(folder_name) + MODELTRAINING_FOLDER
 	characters, labels = load_data(folder_name)
 	characters, labels = suffle_data(characters, labels)
 	hogs = compute_hog(init_hog(), characters)
-	classifier = Classifier(algorithm_type)
-	classifier.train(hogs, labels)
-	classifier.save(dir_root + '/' + MODELFILE_STYPE.format(AlgorithmType(algorithm_type).name, int(time.time())))
-	return classifier
-
+	# create svm classifier
+	svm = cv2.ml.SVM_create()
+	svm.setC(12.5)
+	svm.setGamma(0.5)
+	svm.setType(cv2.ml.SVM_C_SVC)
+	svm.setKernel(cv2.ml.SVM_RBF)
+	svm.train(hogs, cv2.ml.ROW_SAMPLE, labels)
+	svm.save(dir_root + '/model.dat')
 
 def load_data(folder_name):
 	categories = os.listdir(folder_name)
@@ -34,9 +35,6 @@ def load_data(folder_name):
 	return np.array(characters), np.array(labels)
 
 def suffle_data(characters, labels):
-	#
-	#	TO DO
-	#
 	return characters, labels
 
 def init_hog():
@@ -70,5 +68,6 @@ def left_to_fill(image):
 	return bg
 
 
-def test():
-	pass
+if __name__ == '__main__':
+	repo_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+	train(repo_path + '/DataTraining')

@@ -1,1 +1,0 @@
-'''This is module for evaluate performance of algorithms'''

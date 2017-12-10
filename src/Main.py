@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import cv2, sys, os, imutils
 from tkinter import *
 from tkinter.filedialog import askopenfilename, Open
@@ -6,9 +8,7 @@ from tkinter.ttk import Frame, Button, Style, Entry
 from imutils import contours
 from PIL import Image, ImageTk
 from ImgProcessing import *
-from Classifier import *  
-from AlgorithmType import AlgorithmType
-from Train import *
+from Svm import Svm
 
 SAMPLE_FOLDER = "/Samples"
 DATATRAINING_FOLDER = "/DataTraining"
@@ -67,7 +67,8 @@ class MainFrame(Frame):
 		txt = Entry(frame2_3, width=100)
 		txt.pack(fill=BOTH, expand=False, side=LEFT)
 
-		training()
+		global svm
+		svm = cv2.ml.SVM_load('/ModelTraining/model.dat')
 
 
 	
@@ -87,16 +88,15 @@ def chooseFile():
 			panel1.image = image1
 		else:
 			print("null")
-
+'''
 def training():
-	global model
 	global origin_folder
 	# Traning
 	origin_folder = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-	model = train(origin_folder + DATATRAINING_FOLDER, AlgorithmType.SVM)
+	train(origin_folder + DATATRAINING_FOLDER)
 	#model = Classifier.Classifier(AlgorithmType.SVM)
 	#model.load('/ModelTraining/SVM_1509192775.dat')
-
+'''
 
 #def main(is_training):
 def recognise():
@@ -137,12 +137,12 @@ def recognise():
 
 
 
-def experience(image, classifier = None):
+def experience(image):
 	chars = segment(image)
 	hogs = compute_hog(init_hog(), np.array(chars))
 	if len(hogs.shape) == 1 :
 		hogs = np.array([hogs])
-	resp = classifier.predict(hogs)
+	resp = svm.predict(samples)[1].ravel()
 	return list(map(lambda x: chr(x), resp))
 
 
