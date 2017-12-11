@@ -21,7 +21,7 @@ def experience(image):
 if __name__ == '__main__':
 	global svm
 	svm = cv2.ml.SVM_load(origin_folder + '/ModelTraining/model.dat')
-	result = experience(cv2.imread(origin_folder + '/Samples/sample (14).png'))
+	result = experience(cv2.imread(origin_folder + '/Samples/sample (34).png'))
 	print(result)
 
 

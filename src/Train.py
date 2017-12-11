@@ -3,10 +3,11 @@
 import numpy as np
 import cv2, os, time, uuid
 from os.path import dirname
+from math import floor
 
 MODELTRAINING_FOLDER = '/ModelTraining'
 #MODELFILE_STYPE = '{}_{}.dat'	# {algorithm-name}_{time-stamp}.dat
-IMG_WIDTH, IMG_HEIGHT = 32, 40
+IMG_WIDTH, IMG_HEIGHT = 40, 40
 
 def train(folder_name):
 	dir_root = dirname(folder_name) + MODELTRAINING_FOLDER
@@ -30,7 +31,7 @@ def load_data(folder_name):
 		chars = os.listdir('{}/{}'.format(folder_name, cg))
 		for ch in chars:
 			img = cv2.imread('{}/{}/{}'.format(folder_name, cg, ch), 0)
-			characters.append(left_to_fill(img))
+			characters.append(center_to_fill(img))
 			labels.append(ord(cg))
 	return np.array(characters), np.array(labels)
 
@@ -59,12 +60,12 @@ def compute_hog(hog, characters):
 		hogs.append(v)
 	return np.squeeze(hogs)
 
-def left_to_fill(image):
+def center_to_fill(image):
 	f = IMG_HEIGHT/image.shape[0]
 	resize_img = cv2.resize(image, None, fx=f, fy=f, interpolation = cv2.INTER_LINEAR)
 	bg = np.uint8(np.full((IMG_HEIGHT, IMG_WIDTH), 255))
-	bg[0:resize_img.shape[0], 0:resize_img.shape[1]] = resize_img
-	#cv2.imwrite('/home/vudhk/Desktop/License-Plate-Detection/Samples/segnments/{}.jpg'.format(str(uuid.uuid4())), bg)
+	margin = ((bg.shape[0] - resize_img.shape[0]) / 2, (bg.shape[1] - resize_img.shape[1]) / 2)
+	bg[floor(margin[0]):floor(margin[0]) + resize_img.shape[0], floor(margin[1]):floor(margin[1]) + resize_img.shape[1]] = resize_img
 	return bg
 
 
