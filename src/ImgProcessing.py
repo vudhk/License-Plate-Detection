@@ -62,11 +62,12 @@ def segment(image):
 			#cv2.drawContours(img_clone_1,[c],0,(0,0,255),2)
 	cv2.imwrite(img_processing_output + '/4.5-bounding_rect_full.png', img_clone_1)
 
-	# Tạo mặt nạ đen
+	# Tạo mặt nạ
 	mask = np.zeros((binary_image.shape[0], binary_image.shape[1], 1), dtype = "uint8")
+	margin = 5
 	for cnt in list_contours:
 		x, y, w, h = cv2.boundingRect(cnt)
-		cv2.rectangle(mask, (x,y), (x + w, y + h), (255,255,255), -1)
+		cv2.rectangle(mask, (x + margin,y + margin), (x + w - margin, y + h - margin), (255,255,255), -1)
 	
 	cv2.imwrite(img_processing_output + '/4.6-mask.png', mask)
 	_, list_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -81,7 +82,7 @@ def segment(image):
 	kernel = np.ones((3,3),np.uint8)
 	for lc in list_contours:
 		x, y, w, h = cv2.boundingRect(lc)
-		rois.append(cv2.erode(binary_image[y:y + h, x:x + w], kernel, iterations = 1))
+		rois.append(cv2.erode(binary_image[y - margin:y + h + margin, x - margin:x + w + margin], kernel, iterations = 1))
 
 	return np.array([center_to_fill(roi, idx) for idx, roi in enumerate(rois)])
 
