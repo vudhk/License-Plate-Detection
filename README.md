@@ -6,7 +6,7 @@
 
 How to run it:<br />
 1> Install opencv environment<br />
-2> ### cd src
+2> ### cd src<br />
 3> ### workon facecourse-py3<br />
 4> ### python3 Main2.py<br />
 
