@@ -28,6 +28,8 @@ def segment(image):
 		f = 180 / image.shape[0]
 		fixed_size_image = cv2.resize(image, None, fx=f, fy=f, interpolation = cv2.INTER_LINEAR)
 
+	cv2.imwrite(img_processing_output + '/0.1-fixed_size_image.png', fixed_size_image)
+
 	# Loại bỏ nhiễu từ ảnh màu bằng cách ánh xạ vào không gian màu CIELAB
 	fixed_size_image = cv2.fastNlMeansDenoisingColored(fixed_size_image,None,10,10,7,21)
 	cv2.imwrite(img_processing_output + '/1-fixed_size_image.png', fixed_size_image)
@@ -35,6 +37,7 @@ def segment(image):
 	global binary_image
 	# Chuyển ảnh màu sang ảnh xám
 	gray_image = cv2.cvtColor(fixed_size_image, cv2.COLOR_BGR2GRAY)
+	cv2.imwrite(img_processing_output + '/1.1-gray_image.png', gray_image)
 	# Chuyển ảnh xám sang ảnh nhị phân bằng một phương thức có thể thích nghi (adaptive)
 	# ADAPTIVE_THRESH_MEAN_C : Ngưỡng là giá trị trung bình của vùng lân cận. 
 	binary_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
@@ -104,8 +107,8 @@ def segment(image):
 def is_number_region(x,y,w,h,area):
 	img_height = binary_image.shape[0]
 	center = (x + w/2, y + h/2)
+	# Chia biển số thành 4 phần (3 lines) theo chiều dọc, vùng được chọn sẽ có trọng tâm xấp xỉ với line thứ 1 và 3
 	return x > 0 and x + w < binary_image.shape[1] and h/w >= 1.2 and h/w <= 5.5 and area > 400 and w*h < 4000 and \
-			# Chia biển số thành 4 phần (3 lines) theo chiều dọc, vùng được chọn sẽ có trọng tâm xấp xỉ với line thứ 1 và 3
 			((abs(center[1] - img_height / 4) < img_height / 10) or (abs(center[1] - 3 * img_height / 4) < img_height / 10))
 
 # Tính một giá trị cho contour để xác định được thứ tự trước sau và trên dưới.
